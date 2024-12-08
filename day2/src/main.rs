@@ -1,27 +1,40 @@
-use std::collections::HashMap;
 use std::fs;
-use std::io::Read;
+
+const FILE_NAME: &str = "day2/src/input.txt";
 
 fn main() {
-    let mut data = String::new();
-    let mut smallest_left: Vec<usize> = Vec::new();
-    let mut smallest_right: Vec<usize> = Vec::new();
-    let mut f = fs::File::open("day1/src/input.txt").unwrap();
-    f.read_to_string(&mut data).unwrap();
-    for line in data.split('\n') {
-        let mut parts = line.split_whitespace();
-        if let (Some(a), Some(b)) = (parts.next(), parts.next()) {
-            smallest_left.push(a.parse::<usize>().unwrap());
-            smallest_right.push(b.parse::<usize>().unwrap());
+    let file: String = read_file(FILE_NAME);
+    let mut count = 0;
+    for f in file.lines() {
+        let line = f
+            .split(" ")
+            .map(|x| x.parse::<i32>().unwrap())
+            .collect::<Vec<i32>>();
+
+        let mut ok: bool = true;
+        let mut only_inc = true;
+        let mut only_dec = true;
+
+        for i in 0..line.len() - 1 {
+            let diff = line[i + 1] - line[i];
+            if diff > 0 {
+                only_dec = false;
+            } else if diff < 0 {
+                only_inc = false;
+            }
+            if !(1 <= diff.abs() && diff.abs() <= 3) {
+                ok = false;
+                break;
+            }
+        }
+        if ok && (only_inc || only_dec) {
+            count += 1;
         }
     }
-    smallest_left.sort();
-    smallest_right.sort();
-    let mut appears_count: HashMap<usize, usize> = HashMap::new();
-    for i in smallest_left.iter() {
-        let count = smallest_right.iter().filter(|&x| *x == *i).count();
-        appears_count.insert(*i, count);
-    }
-    let result = appears_count.iter().map(|(a,b)| a*b).sum::<usize>();
-    println!("Part: {}", result);
+
+    println!("{}", count);
+}
+
+fn read_file(path: &str) -> String {
+    fs::read_to_string(path).expect("Something went wrong reading the file")
 }
